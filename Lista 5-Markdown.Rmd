@@ -1,0 +1,464 @@
+---
+title: "Lista de Exercícios 5"
+author: "Rafael Santana Araruna"
+date: "13/10/2021"
+output: pdf_document
+---
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+require(tidyverse)
+require(irtoys)
+require(mirt)
+require(knitr)
+require(Rcpp)
+```
+
+
+### **Introdução**
+
+Os dados referem-se a um questionário sobre hiperatividade de alunos do ensino fundamental de uma escola do Rio de Janeiro. As respostas ao questionário não estão disponíveis, mas as estimativas obtidas para os parâmetros dos itens estão disponibilizadas, onde é feita a simulação das respostas para um número grande de alunos. As respostas estão em escala gradual com 4 alternativas por item.
+
+```{r, echo=FALSE}
+a.par <- c(2.258,2.019,2.250,2.072,2.654,2.873,3.475,3.465,2.949)
+b1.par <- c(-0.347,-0.144,0.615,0.317,0.269,-0.321,-0.289,-0.489,-0.547)
+b2.par <- c(0.527,0.708,1.342,1.437,1.138,0.444,0.592,0.303,0.311)
+b3.par <- c(1.515,1.560,1.959,1.986,1.940,1.452,1.622,1.210,1.409)
+n.itens <- length(a.par)
+
+tabela_hiper <- data.frame("Item" = c("Item 1","Item 2","Item 3","Item 4","Item 5","Item 6","Item 7","Item 8","Item 9"),
+                           "a" = a.par,
+                           "b1" = b1.par,
+                           "b2" = b2.par,
+                           "b3" = b3.par)
+knitr::kable(tabela_hiper, align = 'c', caption = "Estimativas Reais dos Parâmetros para cada Item")
+```
+
+## **Questão 1) Elabore, para cada item, um gráfico com as probabilidades de cada categoria ou uma categoria superior, $P^*_{ik}(\theta)$, e um gráfico com as curvas das probabilidades de escolha para cada uma das categorias.**
+
+
+```{r,echo=FALSE}
+# semente
+set.seed(2345)
+
+# numero de respondentes
+nr <- 1000
+
+#geracao das proficiencias
+theta <- rnorm(nr,0,1)
+```
+
+```{r fig.height = 10, fig.width = 10,fig.align='center',echo=FALSE}
+#Para o item 1:
+i <- 1
+par(mfrow=c(3,2))
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+
+#Para o item 2:
+i <- 2
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+
+#Para o item 3:
+i <- 3
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+```
+
+
+```{r fig.height = 10, fig.width = 10,fig.align='center',echo=FALSE}
+#Para o item 4:
+i <- 4
+par(mfrow=c(3,2))
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+
+#Para o item 5:
+i <- 5
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+
+#Para o item 6:
+i <- 6
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+```
+
+
+```{r fig.height = 10, fig.width = 10,fig.align='center',echo=FALSE}
+#Para o item 7:
+i <- 7
+par(mfrow=c(3,2))
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+
+#Para o item 8:
+i <- 8
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+
+#Para o item 9:
+i <- 9
+
+### Curvas das probabilidades de cada categoria ou superior, P*_{ik}(theta), para cada item
+
+plot(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. da Categoria ou Superior"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))), col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),col=2)
+
+### Curvas das probabilidades das categorias para cada item
+
+plot(sort(theta),1-1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i]))),type="l",ylab=c("Prob. das Categorias"),
+     xlab=c("theta"),main=c("Item ",i), col = 2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b1.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b2.par[i])))-1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+lines(sort(theta),1/(1+exp(-a.par[i]*(sort(theta)-b3.par[i]))),
+      col=2)
+```
+
+\newpage
+
+## **Questão 2) O modelo de resposta gradual foi ajustado aos dados originais (não disponíveis). Use as estimativas dos parâmetros para gerar respostas para 1000 alunos. Use o pacote "mirt" do R para ajustar o modelo de resposta gradual às respostas geradas.**
+
+Primeiramente, as respostas para os 1000 alunos vão ser geradas com o seguinte código:
+
+```{r,echo=TRUE, message=FALSE, warning=FALSE}
+#geracao das respostas
+nr <- 1000
+resp <- matrix(0,nr,n.itens)
+
+mat.prob <- matrix(0,n.itens,4)
+for (j in 1:nr) {
+  mat.prob <- cbind(rep(0,n.itens),exp(-a.par*(theta[j]-b1.par)),
+                    exp(-a.par*(theta[j]-b2.par)),exp(-a.par*(theta[j]-b3.par)))
+  mat.prob <- 1/(1+mat.prob)
+  mat.prob <- cbind(-t(apply(mat.prob,1,diff)),mat.prob[,4])
+  for (i in 1:n.itens)
+    resp[j,i] <- sample(4,1,replace=F,mat.prob[i,])
+}
+```
+
+
+Agora, é realizado do ajuste do modelo de resposta gradual utilizando as respostas simuladas anteriormente:
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+write(t(resp),file="C:/Users/jgararuna/Downloads/Lista 5 - TRI/dados.mrg.txt",ncol=n.itens)
+resp <- read.table(file="C:/Users/jgararuna/Downloads/Lista 5 - TRI/dados.mrg.txt")
+mrg <- mirt(resp,1,itemtype=c('graded'))
+```
+
+A partir desse novo modelo ajustado, pode-se obter novas estimativas dos:
+
+* parâmetros dos itens:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+par.est <- coef(mrg,IRTpars=TRUE)
+x <- data.frame(par.est$V1)
+
+for (i in 2:9) {
+  item <- paste0("V", i)
+  
+  x <- rbind(x, par.est[[item]])
+}
+
+row.names(x) <- c("Item 1", "Item 2", "Item 3", "Item 4", "Item 5",
+                  "Item 6", "Item 7", "Item 8", "Item 9")
+a <- data.frame("Item" = c("Item 1","Item 2","Item 3","Item 4","Item 5",
+                           "Item 6","Item 7","Item 8","Item 9"),
+                           "a" = x$a,
+                           "b1" = x$b1,
+                           "b2" = x$b2,
+                           "b3" = x$b3)
+
+kable(a, align = 'c')
+```
+
+
+\newpage
+
+* das proficiências:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+prof.est <- fscores(mrg, full.scores=TRUE)
+x <- data.frame(prof.est)
+colnames(x) <- "Proficiência"
+
+kable(head(x, 10),align = 'c')
+```
+
+*OBS: coloquei apenas as 10 primeiras proficiências estimadas*
+
+
+## **Questão 3) Obtidas as novas estimativas dos parâmetros dos itens e das proficiências a partir das respostas simuladas para os 1000 respondentes, elabore um gráfico das proficiências estimadas versus proficiências verdadeiras. Analise o gráfico.**
+
+```{r, echo=FALSE}
+#Gráfico das proficiências estimadas x proficiências reais
+par(mfrow = c(1, 1))
+plot(theta,prof.est,xlab = "Proficiências Verdadeiras", ylab = "Proficiências Estimadas", 
+     col = 2,pch=16)
+abline(0,1, col = 1)
+```
+A partir do gráfico acima, nota-se que:
+
+* Para os valores inferiores -1 no eixo da proficiência estimada, a estimação não aparenta ser boa, já que não gerou bons resultados, pois muitos pontos ficaram disantes da reta.
+
+* Em relação ao eixo da proficiência estimada, para os valores acima de -1, a estimação aparenta ser boa, pois os pontos estão próximos da reta. No entando, percebe-se que há uma determinada dispersão em torno da reta, indicando a existÊncia de uma componente de erro considerável.
+
+* Nenhum respondente conseguiu ultrapassar os limites de máximo e mínimo.
+
+## **Questão 4) Identifique as respostas dos alunos com proficiências estimada mínima e máxima. Na sua opinião, qual a explicação para a ocorrência de muitos empates nos valores das proficiências estimadas mínimas?**
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+X <- resp[prof.est==min(prof.est),]
+kable(head(x), caption = "Respontentes com Proficiências Mínima", align = 'c')
+
+y <- resp[prof.est==max(prof.est),]
+kable(head(y), caption = "Respondentes com Proficiências Máxima", align = 'c')
+```
+
+As tabelas acima representam os alunos que responderam a primeira ou quarta categoria para todos os itens, resultando na proficiência mínima ou máxima respectivamente. Consequentemente, tem-se a ocorrência de empates, já que eles estão exatamente nos limites de proficiência.
+
+Acerca do número de empates, tem-se:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+z <- data.frame("x" = nrow(x), "y" = nrow(y))
+colnames(z) <- c("Mínima", "Máxima")
+
+kable(z, caption = "Quantidade de Alunos com Proficiência Máxima e Mínima", 
+      align = 'c')
+```
+
+A partir da tabela acima, pode-se observar que a quantidade de empates na proficiência mínima é muito superior à quantidade de empates na proficiência máxima. Acredito que isso acontece pelo fato da condição de hiperatividade não ser o mais comum, isto é, é mais fácil ter vários alunos com 0 de hiperatividade do que com o valor máximo.
+
+## **Questão 5) Compare graficamente as estimativas dos parâmetros dos 9 itens obtidas a partir das respostas simuladas com aquelas fornecidas originalmente.**
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+### gráicos dos parametros "reais" x estimados
+
+mat.par.est <- matrix(0,9,4)
+mat.par.est[1,] <- par.est$V1
+mat.par.est[2,] <- par.est$V2
+mat.par.est[3,] <- par.est$V3
+mat.par.est[4,] <- par.est$V4
+mat.par.est[5,] <- par.est$V5
+mat.par.est[6,] <- par.est$V6
+mat.par.est[7,] <- par.est$V7
+mat.par.est[8,] <- par.est$V8
+mat.par.est[9,] <- par.est$V9
+
+par(mfrow = c(2,2))
+
+plot(a.par,mat.par.est[,1],xlab=c("a"),ylab=c("a estimado"), col = 2, pch=16)
+abline(0,1, col=1)
+
+plot(b1.par,mat.par.est[,2],xlab=c("b1"),ylab=c("b1 estimado"), col = 2,pch=16)
+abline(0,1,col=1)
+
+plot(b2.par,mat.par.est[,3],xlab=c("b2"),ylab=c("b2 estimado"), col =2,pch=16)
+abline(0,1,col=1)
+
+plot(b3.par,mat.par.est[,4],xlab=c("b3"),ylab=c("b3 estimado"), col = 2,pch=16)
+abline(0,1,col=1)
+```
+
+Analisando os gráficos acia, pode-se dize que a estimação aparenta ser boa para todos os parâmetros, já que, em todos eles, os pontos ficaram bastante próximos da reta.
+
+## **Questão 6) Gere valores de parâmetros para 50 itens, gere as respostas para estes itens para 1000 respondentes, ajuste o modelo de resposta gradual aos dados e elabore o gráfico das proficiências estimadas versus proficiências verdadeiras. Compare este gráfico com aquele para as estimativas obtidas a partir dos 9 itens originais.**
+
+Primeiramente, foi obtido valores de parâmetros para 50 itens:
+```{r message=FALSE, warning=FALSE,echo=TRUE}
+n.it <- 50 # numero de itens simulados
+a.par.sim <- runif(n.it,0.5,3)
+b.par.sim <- matrix(rnorm(3*n.it,0,1),n.it,3)
+b.par.sim <- t(apply(b.par.sim,1,sort))
+b1.par.sim <- b.par.sim[,1]
+b2.par.sim <- b.par.sim[,2]
+b3.par.sim <- b.par.sim[,3]
+```
+
+Em seguida, foi gerado, para os 1000 alunos, as respostas para os 50 itens: 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+nr <- 1000
+theta.sim <- rnorm(nr,0,1)
+resp.sim <- matrix(0,nr,n.it)
+
+#geracao das respostas
+
+mat.prob.sim <- matrix(0,n.it,4)
+for (j in 1:nr) {
+  mat.prob.sim <- cbind(rep(0,n.it),exp(-a.par.sim*(theta.sim[j]-b1.par.sim)),
+                        exp(-a.par.sim*(theta.sim[j]-b2.par.sim)),
+                        exp(-a.par.sim*(theta.sim[j]-b3.par.sim)))
+  mat.prob.sim <- 1/(1+mat.prob.sim)
+  mat.prob.sim <- cbind(-t(apply(mat.prob.sim,1,diff)),mat.prob.sim[,4])
+  for (i in 1:n.it)
+    resp.sim[j,i] <- sample(4,1,replace=F,mat.prob.sim[i,])
+}
+```
+
+Agora, pode-se ajustar o modelo de resposta gradual:
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+write(t(resp.sim),file="C:/Users/jgararuna/Downloads/Lista 5 - TRI/dados.mrg.txt",ncol=n.it)
+resp.sim <- read.table(file="C:/Users/jgararuna/Downloads/Lista 5 - TRI/dados.mrg.txt")
+
+mrg.sim <- mirt(resp.sim,1,itemtype=c('graded'))
+```
+
+A partir do modelo ajustado anteriormente, consegue-se calcular novas estimativas para os parâmetros dos itens e para as proficiências:
+
+```{r message=FALSE, warning=FALSE,echo=TRUE}
+prof.est.sim <- fscores(mrg.sim, full.scores=TRUE)
+par.est.sim <- coef(mrg.sim,IRTpars=TRUE)
+```
+
+E por fim, realiza-se a elaboração do gráfico das proficiências estimadas versus proficiências verdadeiras, e a comparação deste gráfico com aquele para as estimativas obtidas a partir dos 9 itens originais:
+
+```{r,echo=FALSE,fig.height=3.5}
+plot(theta.sim,prof.est.sim, xlab = "Proficiências Verdadeiras", 
+     ylab = "Proficiências Estimadas", col = 2, main = "Gráfico com os novos 50 itens", 
+     pch=16)
+abline(0,1, col = 1)
+```
+
+```{r,echo=FALSE,fig.height=3.5}
+#Gráfico das proficiências estimadas x proficiências reais
+plot(theta,prof.est,xlab = "Proficiências Verdadeiras", 
+     ylab = "Proficiências Estimadas", col = 2, main = "Gráfico com os 9 itens originais", 
+     pch=16)
+abline(0,1, col = 1)
+```
+
+O aumento na quantidade de itens, que foi de 9 para 50, diminui bastante a possibilidade de algum respondente marcar todos os itens na primeira ou quarta categoria. Tal fato justifica a principal diferença entre esses dois gráficos, que é a ausência de muitos empates nos valores extremos no 1º gráfico em comparação com o segundo.

@@ -1,0 +1,148 @@
+---
+title: "Lista de Exercícios 1 - Altura"
+author: "Rafael Santana Araruna"
+date: "03/08/2021"
+output: pdf_document
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(irtoys)
+library(ltm)
+library(mirt)
+library(knitr)
+
+altura <- read.fwf(file="C:/Users/jgararuna/Downloads/arquivo_txt_altura.txt",
+                   widths=c(3,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1),dec=',')
+
+#Inserindo nomes nas colunas:
+colnames(altura) <- c("ID","Altura",paste(c("i"),1:14,sep=""))
+
+altura.itens <- altura[,3:16] #utilizando apenas as colunas de respostas
+
+altura.desc <- descript(altura.itens)
+```
+
+
+**1) Com base nos coeficientes estudados, você vê algum item que deva ser descartado? Justifique sua resposta**
+
+Realizando, primeiramente, o estudo do coeficiente de correlação ponto bisserial, nota-se os seguintes valores para cada item:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Os valores da correlacao ponto bisserial para todos os itens:
+a <- data.frame(altura.desc$bisCorr)
+colnames(a) <- c("Valor")
+knitr::kable(a)
+```
+
+Observando a tabela acima, a gente percebe que todos os itens possuem valores positivos, ou seja, nenhum item deve ser descartado.
+
+Realizando agora um estudo sobre o coeficiente de correlação bisserial, nota-se os seguintes valores para cada item:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# correlação bisserial:
+rho.B.vec <- rep(0,14)
+for (i in 1:14) {
+  pp <- colSums(altura.itens)[i]/nrow(altura.itens)
+  rho.B <- sqrt(pp*(1-pp))*altura.desc$bisCorr[i]/dnorm(qnorm(pp,0,1),0,1)
+  rho.B.vec[i] <- rho.B
+}
+
+b <- data.frame(c("i1","i2","i3","i4","i5","i6","i7","i8","i9","i10","i11","i12","i13","i14"),rho.B.vec)
+colnames(b) <- c("","Valor")
+knitr::kable(b)
+```
+
+Analisando a tabela acima, observa-se que nenhum item possui valor negativo, ou seja, nenhum item deve ser descartado, corroborando com o resultado da correlação ponto bisserial.
+
+
+**2) Itens com valores maiores para o coefiiente de correlação ponto-bisserial tendem a apresentar maiores valores também para o coeficiente de correlação bisserial? Apresente um
+diagrama de dispersão com os valores dos dois coeficientes para os 14 itens**
+
+No intuito de ver a correlação existente entres os dois coeficiente calculados no item anterior, analisa-se o seguinte gráfico abaixo:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+plot(altura.desc$bisCorr, rho.B.vec, xlab=c("Correlação ponto bisserial"),
+     ylab=c("Correlação bisserial"),xlim=c(0,1),ylim=c(0,1), pch = 16)
+abline(0,1, col = 2)
+```
+
+Observando o gráfico acima, pode-se dizer que os dois coeficiente possuem uma relação linear crescente.
+
+**3) Uma alternativa para o escore total como medida de proficiência (altura, neste caso)
+seria o escore padronizado**
+
+A partir dos valores do escore padronizados, obtém-se as estimativas da altura de cada indivíduo com a mesma média e desvio-padrão das alturas reais:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+T_j <- apply(altura.itens,1,sum)
+mean_Tj <- mean(T_j)
+dp_Tj <- sd(T_j)
+Z_j <- (T_j-mean_Tj)/dp_Tj #escores padronizados
+
+media_real <- mean(altura$Altura)
+sd_real <- sd(altura$Altura)
+H_j <- media_real+sd_real*Z_j #altura estimada de cada indivíduo
+```
+
+Agora, analisamos a relação entre as alturas reais e as estimadas, calculando a correlação entre elas e plotando o gráfico de dispersão:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+print(cor(altura$Altura, H_j))
+
+plot(altura$Altura,H_j,xlab = "Alturas Reais", ylab = "Alturas Estimadas", pch=16)
+abline(lm(H_j~altura$Altura),col=2)
+```
+
+Analisando o gráfico de dispersão, as alturas reais e as alturas estimadas aparentam ter uma relação linear crescente. Fazendo o cálculo da correlação entre elas, cujo valor é de 0,78, pode-se dizer que as alturas reais e as alturas estimadas possuem um boa correlação. 
+
+
+**4)Com base no coeficiente de Cronbach, a consistência interna do questionário é satisfatória**
+
+Calculando o coeficiente de Cronbach, obtém-se o seguinte resultado:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+print(cronbach.alpha(altura.itens))
+
+# para todos os itens:
+c <- data.frame(altura.desc$alpha)
+colnames(c) <- c("Valor")
+knitr::kable(c)
+```
+
+Analisando a tabela acima, nota-se que o valor do coeficiente, com todos os itens, está acima de 0,70, cujo valor foi de 0,826, e os valores do coeficiente, excluindo item por item, também ficaram acima de 0,70, ou seja, a consistência interna do questionário é satisfatória. 
+
+
+**5) Quais os itens com o menor e o maior índices de dificuldade?**
+
+Fazendo o cálculo dos índices de dificuldade, percebe-se os seguintes resultados:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Indice de dificuldade dos itens:
+d <- data.frame(1-apply(altura.itens,2,sum)/nrow(altura.itens))
+colnames(d) <- c("Valor")
+knitr::kable(d)
+```
+
+Analisando a tabela acima, nota-se que o item com maior índice de dificuldade é o item 8, cujo valor é de 0,919, e o item com menor índice de dificuldade é o item 9, cujo valor é de 0,327.
+
+**6) Quais itens apresentam maior índice de discriminação entre indivíduos altos e baixos?**
+
+Fazendo o cálculo dos índices de discriminação, percebe-se os seguintes resultados:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Coeficiente de discriminacao dos itens:
+escore <- apply(altura.itens,1,sum)
+aux <- ceiling(0.27*nrow(altura.itens))
+escore.inf <- sort(escore)[aux]
+escore.sup <- sort(escore)[nrow(altura.itens)-aux]
+
+altura.inf <- altura.itens[escore<=escore.inf,]
+altura.sup <- altura.itens[escore>=escore.sup,]
+
+e <- data.frame(apply(altura.sup,2,sum)/nrow(altura.sup)-apply(altura.inf,2,sum)/nrow(altura.inf))
+colnames(e) <- c("Valor")
+knitr::kable(e)
+
+```
+
+Analisando a tabela acima, nota-se que o item com maior índice de discriminação é o item 10, cujo valor é de 0,908, e o item com menor índice de discriminação é o item 8, cujo valor é de 0,171.

@@ -1,0 +1,119 @@
+---
+title: "Lista de Exercícios 4 - Equalização"
+author: "Rafael Santana Araruna - 180026798"
+date: "24/09/2021"
+output: pdf_document
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+saresp <- read.table(file="C:/Users/jgararuna/Downloads/saresp.txt")
+gab2 <- read.table(file="C:/Users/jgararuna/Downloads/saresp-gabarito.txt")
+
+dados <- saresp
+
+manha <- dados[dados[,4]=="m07",]
+tarde <- dados[dados[,4]=="t07",]
+noite <- dados[dados[,4]=="n07",]
+
+gab3 <- matrix(9,nrow(gab2),ncol(gab2))
+
+for (i in 1:nrow(gab3)) {
+  for (j in 1:ncol(gab3)) {
+    if (gab2[i,j]=="A") gab3[i,j] <- 1
+    if (gab2[i,j]=="B") gab3[i,j] <- 2
+    if (gab2[i,j]=="C") gab3[i,j] <- 3
+    if (gab2[i,j]=="D") gab3[i,j] <- 4
+  }
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+resp.manha <- manha[,5:34]
+resp.manha <- as.matrix(resp.manha)
+resp.m <- matrix(9,nrow(resp.manha),ncol(resp.manha))
+resp.m[resp.manha=="A"] <- 1
+resp.m[resp.manha=="B"] <- 2
+resp.m[resp.manha=="C"] <- 3
+resp.m[resp.manha=="D"] <- 4
+
+for (i in 1:nrow(resp.m)) {
+  for (j in 1:ncol(resp.m)) {
+    if ((resp.m[i,j]!=gab3[1,j])&&(resp.m[i,j]!=9)) resp.m[i,j] <- 0 
+    if (resp.m[i,j]==gab3[1,j]) resp.m[i,j] <- 1 
+  }
+}
+
+resp.m[resp.m==9] <- NA
+
+
+resp.noite <- noite[,5:34]
+resp.noite <- as.matrix(resp.noite)
+resp.n <- matrix(9,nrow(resp.noite),ncol(resp.noite))
+resp.n[resp.noite=="A"] <- 1
+resp.n[resp.noite=="B"] <- 2
+resp.n[resp.noite=="C"] <- 3
+resp.n[resp.noite=="D"] <- 4
+
+for (i in 1:nrow(resp.n)) {
+  for (j in 1:ncol(resp.n)) {
+    if ((resp.n[i,j]!=gab3[3,j])&&(resp.n[i,j]!=9)) resp.n[i,j] <- 0 
+    if (resp.n[i,j]==gab3[3,j]) resp.n[i,j] <- 1 
+  }
+}
+
+resp.n[resp.n==9] <- NA
+```
+
+
+## **1) Use (ou adapte) o codigo R no arquivo "saresp-codigo.txt" para fazer a equalização entre as proficiências dos alunos do turno da noite e da manhã que fizeram a prova de Língua Portuguesa do SARESP em 2007. Expresse as proficiências dos alunos do turno da noite na escala das proficiências dos alunos do turno da manhã. Os itens comuns nas provas da manhã e da noite são os de números 15 a 19.**
+
+**a) Faça a equalização via método média-desvio**
+
+Primeiramente, a partir do código abaixo, foi obtido as estimativas dos parâmetros dos itens para o turno da manhã e da noite, além da estimação da proficiência para o turno da noite:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(irtoys)
+
+# Obtenção das estimativas dos parâmetros dos itens para turno da manhã::
+resp.m.tpm <- tpm(resp.m)
+par.m.est <- coef(resp.m.tpm)
+
+
+# Obtenção das estimativas dos parâmetros dos itens para turno da noite:
+resp.n.tpm <- tpm(resp.n)
+par.n.est <- coef(resp.n.tpm)
+
+# Estimacao da proficiência para o turno da noite:
+
+theta.n.est <- eap(resp.n, cbind(par.n.est[,3],par.n.est[,2],par.n.est[,1]), qu=normal.qu())
+prof.n.est <- theta.n.est[,1]
+```
+
+Agora, depois de realizado as estimações, pode-se fazer a equalização pelo método média-desvio, com o seguinte código:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#Equalizacao pelo metodo média-desvio:
+
+alfa <- sd(par.m.est[15:19,2])/sd(par.n.est[15:19,2])
+
+beta <- mean(par.m.est[15:19,2])-alfa*mean(par.n.est[15:19,2])
+
+cbind(alfa,beta)
+
+# Proficiência dos alunos da noite na escala da manhã:
+
+prof.nm <- alfa*prof.n.est+beta
+```
+
+
+**b) Faça gráficos com as proficiências equalizadas versus as proficiências originais dos alunos do turno da noite. Interprete os resultados.**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+plot(prof.n.est,prof.nm, pch = 16, xlab = "Proficiência Original", ylab = "Proficiência Equalizada")
+abline(0,1, col=2)
+```
+
+A partir da análise do gráfico acima, pode-se concluir que:
+
+  - a medida que a proficiência cresce, os valores de ambos os turnos ficam mais semelhantes.
+  - a proficiência do turno da noite, em comparação com a do turno da manhã, é menor.

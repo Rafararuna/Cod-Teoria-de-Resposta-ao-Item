@@ -1,0 +1,151 @@
+---
+title: "Lista de Exercícios 3 - Estimação"
+author: "Rafael Santana Araruna"
+date: "06/09/2021"
+output: pdf_document
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+require(irtoys)
+require(ltm)
+require(mirt)
+library(knitr)
+```
+
+## Leitura do Arquivo 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+altura <- read.fwf(file="C:/Users/jgararuna/Downloads/arquivo_txt_altura.txt",
+                   widths=c(3,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1),dec=',')
+```
+
+
+## Questão 1)
+
+A partir do código abaixo, foi feito o ajuste o modelo logístico de dois parâmetros aos dados:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+no.item <- ncol(altura[,3:16]) #número de variáveis dicotômicas
+altura.tpm <- tpm(altura[,3:16],constraint=cbind(1:no.item,1,0))
+print(altura.tpm)
+```
+
+
+## Questão 2)
+
+A partir do seguinte código, tem-se as estimativas dos parâmetros dos itens:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+par.est <- coef(altura.tpm) #estimativas dos parâmetros dos itens
+print(par.est)
+```
+
+Agora, é realizado o plot das curvas de cada item: 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+theta.vec <- seq(-4,4,0.01)
+
+par(mfrow = c(3, 5))
+for (i in 1:14) {
+  prob <- 1/(1+exp(-par.est[i,3]*(theta.vec-par.est[i,2])))
+plot(theta.vec, prob, type="l", xlab=c("Proficiência)"),
+     ylab=c("Probab. de Resp. Positiva"), ylim = c(0,1), 
+     main = paste0("Item", i), col = 2)
+}
+```
+
+## Questão 3)
+
+Para o cálculo das funções de informação dos itens e para a construção do gráfico com estas funções, foi realizado o seguinte código:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+mat.prob <- mat.prob.dif <- mat.info <- matrix(0,no.item,length(theta.vec))
+
+for (i in 1:no.item) {
+  for (j in 1:length(theta.vec)) {
+    mat.prob[i,j] <- par.est[i,1] + (1-par.est[i,1])/(1+exp(-par.est[i,3]*(theta.vec[j]-par.est[i,2])))
+    mat.prob.dif[i,j] <- par.est[i,3]*(1-par.est[i,1])*exp(-par.est[i,3]*(theta.vec[j]-par.est[i,2]))/
+      ((1+exp(-par.est[i,3]*(theta.vec[j]-par.est[i,2])))^2)
+    mat.info[i,j] <- (mat.prob.dif[i,j]^2)/(mat.prob[i,j]*(1-mat.prob[i,j]))
+  }
+}
+
+plot(theta.vec,mat.info[1,],type="l",ylim=c(0,max(mat.info)),
+     xlab=c("Proficiência"),ylab=c("Informação"),
+     main=c("Funções de Informação dos Itens"))
+for (i in 2:no.item) 
+  lines(theta.vec,mat.info[i,], col = 2)
+```
+
+## Questão 4)
+
+É bastante difícil identificar os itens diretamente, já que são muitos itens agrupados. Dessa forma, no intuito de se ter a quantidade acumulada de informação até a proficiência 0, isto é, de se ter os itens que mais fornecem informação para pessoas baixas, foi realizado o seguinte código:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+v <- c()
+for(i in 1:14){
+  a <- sum(mat.info[i,0:400])
+  v <- append(v,a)
+}
+
+d <- data.frame(Item = c("i1","i2","i3","i4","i5","i6","i7","i8","i9",
+                         "i10","i11","i12","i13","i14"), 
+                Soma_da_Informação = v)
+knitr::kable(d, align = 'c')
+```
+
+Analisando a tabela cima, nota-se que, para os indivíduos baixos, os itens que melhor fornecem informação são os itens 4, 7, 10 e 12, que são os que tem a maior soma.
+
+## Questão 5)
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+#Gráfico da função de informação do teste
+plot(theta.vec,apply(mat.info,2,sum),type="l",ylim=c(0,max(apply(mat.info,2,sum))),
+     xlab=c("Proficiência"),
+     ylab=c("Informação"),main=c("Função de Informação do Teste"), col = 2)
+```
+
+Analisando o gráfico acima, conclui-se que esse teste não é adequado, pois não se tem muita informação para os indvíduos que são baixos, então, não é bom para estimar nessa situação.
+
+## Questão 6)
+
+A partir do seguinte código, foi realizado a conversão das alturas estimadas para a escala com média e desvio-padrão iguais a altura média e desvio-padrão reais, respectivamente:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+par.est <- coef(altura.tpm) #estimativas dos parâmetros dos itens
+
+#matriz com a estimativa da proficiência e o erro-padrão
+theta.est.eap <- eap(altura[3:16], cbind(par.est[,3],par.est[,2],par.est[,1]), qu=normal.qu())
+
+#Transformação linear da altura estimada com média e variância iguais a altura real
+theta.est <- mean(altura[,2]) + sd(altura[,2])*theta.est.eap[,1]
+```
+
+## Questão 7)
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+plot(altura[,2],theta.est, col = 2, pch = 16, xlab = "Altura Real",
+     ylab = "Altura Estimada", main = "Altura Real x Altura Estimada")
+abline(0,1, col = 2)
+
+cor(altura[,2],theta.est)
+```
+
+Observando o gráfico acima, as alturas, real e estimada, aparentam ser diretamente proporcionais, ou seja, quanto maior uma, maior a outra. Tal afirmação pode ser verificada a partir do valor da correlação, que foi de 0,800, ou seja, as variáveis possuem uma alta correlação positiva, como mostra o gráfico.
+
+## Questão 8) 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+#Estimação da altura via TCT
+escore <- apply(altura[,3:16],1,sum)
+escore.padr <- (escore-mean(escore))/sd(escore)
+theta.est.tct <- mean(altura[,2]) + sd(altura[,2])*escore.padr
+
+plot(theta.est.tct,theta.est,xlab=c("Altura estimada (TCT)"),
+     ylab=c("Altura estimada (TRI)"), col = 2, pch = 16)
+abline(0,1, col = 2)
+
+cor(theta.est.tct,theta.est)
+```
+
+Analisando o gráfico, que apresenta uma linearidade crescente, os métodos aparentam ser diretamente proporcinais. A partir do valor da correlação, que é de 0,97 (alta correlação positiva), pode-se dizer que os métodos convergem.

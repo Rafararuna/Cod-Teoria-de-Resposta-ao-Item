@@ -1,0 +1,176 @@
+---
+title: "Lista de Exercícios 6"
+author: "Rafael Santana Araruna"
+date: "30/10/2021"
+output: pdf_document
+---
+
+# Questão 1
+
+Use (ou adapte) o código R no arquivo “lista-CAT-codigo.txt” para elaborar um gráfico com o número de itens necessários para convergência da estimativa da proficiência para valores de proficiência no conjunto (-2, -1, -0.5, 0, 0.5, 1, 2), para diferentes tamanhos de bancos de itens (200, 500, 1000). Ou seja, fixado o valor da proficiência e o tamanho do banco de itens, aplique o código e armazene o número de itens necessário para atingir a convergência da estimativa da proficiência. No gráfico, crie três cruvas (uma para cada tamanho de banco de itens) com o número de itens respondidos até atingir a convergência da estimativa em função da proficiência real.
+
+```{r message=FALSE, warning=FALSE,echo=FALSE}
+library(ggplot2)
+library(catR)
+
+set.seed(1981)
+theta <- c(-2, -1, -.5, 0, .5, 1, 2)
+n.itens <- c(200, 500, 1000)
+
+convergencia <- c()
+for(i in seq_along(theta)) {
+  for (j in seq_along(n.itens)) {
+    theta.i <- theta[i]; n.itens.j <- n.itens[j]
+    # geracao dos parametros dos itens
+    aa <- rlnorm(n.itens.j, 0, .5) # discriminacao
+    bb <- rnorm(n.itens.j, 0, 1) # dificuldade
+    cc <- rbeta(n.itens.j, 80, 320) # acerto ao acaso
+    dd <- rep(1, n.itens.j) # ansiedade, descuido, distracao
+    mat.par <- cbind(aa, bb, cc, dd)
+    
+    resultado <- randomCAT(theta.i, mat.par, test = list(method = "EAP", 
+                                                         priorDist = "norm",
+                                                         priorPar = c(0, 1)),
+
+                                              stop = list(rule = "precision", 
+                                                          thr = .3, 
+                                                          alpha = .05))
+
+    convergencia <- c(convergencia, length(resultado$testItems))
+  }
+}
+
+df <- data.frame(banco = factor(rep(n.itens, times = length(theta))),
+                 profi = rep(theta, each = length(n.itens)),
+                 convergencia)
+
+ggplot(df, aes(x = profi, y = convergencia, group = banco, colour = banco)) +
+  geom_line(size=1) + geom_point(size=2) +
+  scale_colour_manual(name = "Tamanho do Banco de Itens", 
+                      values = c("#ffa700", "#008744","#0057e7"))+
+  labs(x = expression(theta), y = "N° de Itens até Convergência") +
+  scale_x_continuous(breaks = theta) +
+  theme_bw() +
+  theme(axis.title.y=element_text(colour="black", size=12), 
+        axis.title.x = element_text(colour="black",size=12),
+        axis.text = element_text(colour = "black", size=9.5),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black")) +
+  theme(legend.position="top")
+```
+
+# Quetsão 2
+
+Utilize o código R “lista-DIF-codigo” para verificar que os testes de Mantel-Haenszel e da regressão logística detectam DIF no primeiro item do teste. No código, os respondentes são divididos em dois grupos com CCI’s distintas para o primeiro item. Inclua na solução da lista os p-valores dos testes para cada item.
+
+```{r message=FALSE, warning=FALSE,echo=FALSE}
+library(ltm)
+library(irtoys)
+library(mirt)
+library(difR)
+
+set.seed(2019)
+D <- 1
+n.resp <- 1000
+n.itens <- 30
+prop.0 <- .5 # proporcao dos respondentes no grupo 0
+
+n0 <- n.resp*prop.0; n1 <- n.resp - n0
+a0 <- a1 <- 1.5
+b0 <- -1; b1 <- 1
+c0 <- c1 <- .2
+
+### geracao dos valores dos parametros dos demais itens (sem DIF)
+aa <- rlnorm((n.itens-1), 0, .5) # discriminacao entre 0.3 e 2.5
+bb <- rnorm((n.itens-1), 0, 1)
+cc <- rbeta((n.itens-1), 80, 320) # "c" entre 0.15 e 0.25
+
+aa <- c((a0*n0 + a1*n1)/n.resp, aa)
+bb <- c((b0*n0 + b1*n1)/n.resp, bb)
+cc <- c((c0*n0 + c1*n1)/n.resp, cc)
+
+### geracao das proficiencias
+theta <- rnorm(n.resp, 0, 1)
+
+### geracao das respostas
+dados <- matrix(0, n.resp, n.itens)
+
+### alocacao dos respondentes aos grupos 0 e 1
+grupo.0.ind <- sample(c(1:n.resp), n0)
+grupo <- rep(1, n.resp); grupo[grupo.0.ind] <- 0
+
+p <- rep(0, n.resp)
+p[grupo == 0] <- c0 + (1 - c0)/(1 + exp(-D*a0*(theta[grupo == 0] - b0)))
+p[grupo == 1] <- c1 + (1 - c1)/(1 + exp(-D*a1*(theta[grupo == 1] - b1)))
+
+p0 <- p[grupo == 0]; p1 <- p[grupo == 1]
+theta0 <- theta[grupo == 0]; theta1 <- theta[grupo == 1]
+
+dados[grupo == 0, 1] <- rbinom(n0, 1, p0); dados[grupo ==1, 1] <- rbinom(n1, 1, p1)
+
+for (i in 2:n.itens){
+  dados[,i] <- rbinom(n.resp, 1, cc[i] + (1 - cc[i])/(1 + exp(-D*aa[i]*(theta - bb[i]))))
+}
+
+## Estimacao das proficiencias via EAP
+theta.est <- eap(dados, cbind(aa,bb,cc), qu = normal.qu())
+theta.est <- theta.est[,1]
+
+#############################################
+### Aplicacao do teste de Mantel-Haenszel ###
+#############################################
+p_value_mh <- rep(0, n.itens)
+
+dados <- as.data.frame(dados)
+dados2 <- cbind(dados, theta.est, grupo)
+
+for (j in 1:n.itens) {
+  # Divisão em 4 grupos para o cálculo do teste de Mantel-Haenszel
+  n.part <- 4
+
+  part <- c(-10, qnorm(c(1:(n.part - 1))/n.part, 0, 1), 10)
+  Dados_MH <- array(rep(0, 2*2*n.part), dim = c(2, 2, n.part), 
+                  dimnames = list(Pontuacao = c("Errado", "Certo"), 
+                                  Grupo = c("Grupo_0", "Grupo_1"), 
+                                  Nivel_proficiencia = paste(1:4)))
+
+  dados.j <- cbind(dados[,j], theta.est, grupo)
+  for (l in 1:n.part) {
+    dados.j.aux <- dados.j[(dados.j[,2] > part[l]) & (dados.j[,2] <= part[l+1]),]
+    Dados_MH[,,l] <- table(dados.j.aux[,1], dados.j.aux[,3])
+}
+
+  ######## Mantel-Haenszel
+  Dados_MH[is.na(Dados_MH)] <- 0
+  # Dados_MH
+  # Classical Mantel-Haenszel test
+  classico <- mantelhaen.test(Dados_MH); p_value_mh[j] <- classico$p.value
+}
+
+
+###########################
+### Regressão logística ###
+###########################
+dados2 <- cbind(dados, theta.est, grupo)
+dados2 <- as.data.frame(dados2)
+
+p_value_logist <- matrix(0, n.itens, 2)
+for (j in 1:n.itens) {
+  logist.glm <- glm(dados2[,j] ~ dados2$theta.est + dados2$grupo +
+  dados2$theta.est*dados2$grupo, family = binomial)
+
+  # summary(logist.glm)
+  saida <- anova(logist.glm, test = "Chisq")
+
+  # p-valor para o efeito do grupo (DIF uniforme) e
+  # p-valor para a interação theta*grupo (DIF não-uniforme)
+  p_value_logist[j, 1] <- saida$Pr[3]
+  p_value_logist[j, 2] <- saida$Pr[4]
+}
+
+result <- cbind(c(1:n.itens), round(p_value_mh, 5), round(p_value_logist, 5))
+colnames(result) <- c("Item", "Mantel-Haenszel", "Logística-Uniforme", "Logística-Não Uniforme")
+
+knitr::kable(result,align = 'c')
+```
+

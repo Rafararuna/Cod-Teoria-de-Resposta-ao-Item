@@ -1,0 +1,124 @@
+---
+title: "Resolução - Lista 2"
+author: "Rafael Santana Araruna"
+date: "17/08/2021"
+output: pdf_document
+---
+
+
+## Questão 1) Na tabela abaixo, estão apresentados os parâmetros dos itens para dois testes distintos, teste 1 e teste 2 respectivamente, cada um com 6 itens.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr)
+
+mat.par.1 <- matrix(c(1.8, .7, 1.8, 1.2, 1.2, .5, 1, 1, 1, -.5, .5, 0, 0.2, 0.2, .25, .2, 0.25, .25),nrow=6)
+colnames(mat.par.1) <- c("a_i","b_i","c_i")
+rownames(mat.par.1) <- c("item 1", "item 2",  "item 3",  "item 4",  "item 5", "item 6")
+a <- data.frame(mat.par.1)
+knitr::kable(a)
+
+mat.par.2 <- matrix(c(2, .5, 1.5, 1.3, 1.1, .7, -1, 1, -1.5, .5, 1.5, 2, 0.2, 0.2, .25, .2, 0.25, .25),nrow=6)
+colnames(mat.par.2) <- c("a_i","b_i","c_i")
+rownames(mat.par.2) <- c("item 1", "item 2",  "item 3",  "item 4",  "item 5", "item 6")
+b <- data.frame(mat.par.2)
+knitr::kable(b)
+
+theta <- seq(-4,4,0.01)
+```
+
+## a) Construa um gráfico para cada teste com as curvas características dos itens (CCI):
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+mat.prob <- matrix(0,nrow(mat.par.1),length(theta))
+
+#Gráfico das CCI's para o teste 1:
+
+for (i in 1:nrow(mat.par.1)) {
+  for (j in 1:length(theta))
+    mat.prob[i,j] <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))
+}
+
+plot(theta,mat.prob[1,],type="l",ylim=c(0,1), main = "Gráfico CCI - teste 1", xlab = "Proficiência(theta)",
+     ylab = "Probabilidade", col = 2)
+
+for (i in 2:nrow(mat.par.1))
+  lines(theta,mat.prob[i,],lty=i, col = 2)
+legend(-4,1,c("Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"), lty = c(1:6), col = 2)
+
+#Gráfico das CCI's para o teste 2:
+
+for (i in 1:nrow(mat.par.2)) {
+  for (j in 1:length(theta))
+    mat.prob[i,j] <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))
+}
+
+plot(theta,mat.prob[1,],type="l",ylim=c(0,1), main = "Gráfico CCI - teste 2", xlab = "Proficiência(theta)",
+     ylab = "Probabilidade", col = 2)
+
+for (i in 2:nrow(mat.par.2))
+  lines(theta,mat.prob[i,],lty=i, col = 2)
+legend(-4,1,c("Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"), lty=c(1:6), col = 2)
+```
+
+
+## b) Qual o item mais fácil de cada teste? Justique sua resposta.
+
+O parâmetro que está relacionado com a dificuldade de cada item é o parâmetro b_i. Portanto, basta analisarmos, na tabela, qual o item que tem menor valor b_i para cada teste, assim, saberemos qual o item mais fácil. No teste 1, conclui-se que é o item 4, cujo valor é de -0.5, e, no teste 2, conclui-se que é o item 3, cujo valor é de -1.5. 
+
+## c) Qual o item que menos discrimina em cada teste? Justique sua resposta.
+
+O parâmetro que está relacionado com a discriminação de cada item é o parâmetro a_i. Além disso, sabemos que quanto maior o valor de a_i, maior é a inclinação do gráfico CCI. Portanto, basta analisarmos, na tabela, qual o item que tem menor valor a_i para cada teste, e analisarmos, no gráfico CCI, qual item que tem menor inclinação. Assim, saberemos qual o item que menos discrimina, ou seja, que possui a menor diferença entre as probabilidades de resposta positiva de dois indivíduos, um com proficiência acima de b_i e outro com proficiência abaixo de b_i. No teste 1, conclui-se que é o item 6, cujo valor é de 0.5, e, no teste 2, conclui-se que é o item 2, cujo valor é de 0.5. 
+
+## d) Qual o item em cada teste para o qual um indivíduo com proficiência igual a 0 tem a maior probabilidade de acerto?
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+vec.prob.1 <- mat.par.1[,3] + (1-mat.par.1[,3])/(1+exp(-mat.par.1[,1]*(0-mat.par.1[,2])))
+print(vec.prob.1) #item 4
+vec.prob.2 <- mat.par.2[,3] + (1-mat.par.2[,3])/(1+exp(-mat.par.2[,1]*(0-mat.par.2[,2])))
+print(vec.prob.2) #item 3 
+```
+
+Analisando as duas saídas acima, referentes ao teste 1 e teste 2 respectivamente, nota-se que, para o teste 1, o item que possui a maior probabilidade é o item 4 e, para o teste 2, o item que possui a maior probabilidade é o item 3.
+
+## Questão 2) Elabore um único gráfico com a função de informação (FIT) de cada um dos dois testes:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+mat.prob <- mat.prob.dif <- mat.info <- matrix(0,nrow(mat.par.1),length(theta))
+
+
+#grafico FIT do teste 1:
+for (i in 1:nrow(mat.par.1)) {
+  for (j in 1:length(theta)) {
+    mat.prob[i,j] <- mat.par.1[i,3] + (1-mat.par.1[i,3])/(1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))
+    mat.prob.dif[i,j] <- mat.par.1[i,1]*(1-mat.par.1[i,3])*exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2]))/
+      ((1+exp(-mat.par.1[i,1]*(theta[j]-mat.par.1[i,2])))^2)
+    mat.info[i,j] <- (mat.prob.dif[i,j]^2)/(mat.prob[i,j]*(1-mat.prob[i,j]))
+  }
+}
+
+info.1 <- apply(mat.info,2,sum)
+
+plot(theta,info.1,type="l", main = "Informação de Fisher - teste 1 e teste 2", xlab = "Proficiência(theta)",
+     ylab = "Informação", col = 2)
+
+#grafico FIT do teste 2:
+for (i in 1:nrow(mat.par.2)) {
+  for (j in 1:length(theta)) {
+    mat.prob[i,j] <- mat.par.2[i,3] + (1-mat.par.2[i,3])/(1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))
+    mat.prob.dif[i,j] <- mat.par.2[i,1]*(1-mat.par.2[i,3])*exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2]))/
+      ((1+exp(-mat.par.2[i,1]*(theta[j]-mat.par.2[i,2])))^2)
+    mat.info[i,j] <- (mat.prob.dif[i,j]^2)/(mat.prob[i,j]*(1-mat.prob[i,j]))
+  }
+}
+
+info.2 <- apply(mat.info,2,sum)
+
+lines(theta,info.2,lty=2, col = 2)
+legend(-4,1.5,c("Teste 1", "Teste 2"), lty=c(1,2), col = 2)
+```
+
+
+## Questão 3) Com base nos gráficos das FIT's, qual dos testes você escolheria para estimar as proficiências no intervalo [0;2]. Justitique sua resposta.
+
+Para o intervalo [0;2], escolheria o teste 1, pois ao observarmos o valor da informação como função de theta, podemos definir para quais valores da proficiência sua estimação será mais precisa, o que ocorre para aqueles valores onde a informação é maior, e a informação é maior no teste 1.
